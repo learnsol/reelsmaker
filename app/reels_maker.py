@@ -2,14 +2,13 @@ import asyncio
 import multiprocessing
 import os
 import shutil
-
 import aiohttp
 import moviepy.config as moviepy_config
 from dotenv import load_dotenv
 from loguru import logger
 from moviepy.audio.AudioClip import concatenate_audioclips
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 from pydantic import BaseModel
 from typing_extensions import cast
 

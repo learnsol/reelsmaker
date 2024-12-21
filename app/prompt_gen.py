@@ -1,9 +1,12 @@
-from langchain.cache import SQLiteCache
+import langchain
+import langchain_community
+from langchain_community.cache import SQLiteCache
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.globals import set_llm_cache
 from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
+import openai
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -15,10 +18,9 @@ class HashtagsSchema(BaseModel):
 
     hashtags: list[str] = Field(description="List of hashtags for the sentence")
 
-
 class PromptGenerator:
     def __init__(self):
-        self.model = ChatOpenAI(model="gpt-4o-mini")
+        self.model = AzureChatOpenAI(azure_deployment="gpt-4o-mini", api_version="2024-08-01-preview", model="gpt-4o-mini")
 
     async def generate_sentence(self, sentence: str) -> str:
         """generates a sentence from a prompt"""

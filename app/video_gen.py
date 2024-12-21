@@ -8,10 +8,10 @@ from loguru import logger
 from moviepy import ImageClip
 from moviepy.audio.AudioClip import CompositeAudioClip
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 from moviepy.video import fx
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.compositing.concatenate import concatenate_videoclips
+from moviepy import concatenate_videoclips
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.video.VideoClip import TextClip
 from pydantic import BaseModel
@@ -66,13 +66,13 @@ class VideoGenerator:
                 )
 
                 if (max_duration - tot_dur) < clip.duration:
-                    clip = clip.subclip(0, (max_duration - tot_dur))
+                    clip = clip.subclipped(0, (max_duration - tot_dur))
                 elif req_dur < clip.duration:
-                    clip = clip.subclip(0, req_dur)
+                    clip = clip.subclipped(0, req_dur)
                 clip = clip.with_fps(30)
 
                 if round((clip.w / clip.h), 4) < 0.5625:
-                    clip = fx.crop(
+                    clip = fx.Crop(
                         clip,
                         width=clip.w,
                         height=round(clip.w / 0.5625),
@@ -80,28 +80,27 @@ class VideoGenerator:
                         y_center=clip.h / 2,
                     )
                 else:
-                    clip = fx.crop(
+                    clip = fx.Crop(
                         clip,
                         width=round(0.5625 * clip.h),
                         height=clip.h,
                         x_center=clip.w / 2,
                         y_center=clip.h / 2,
                     )
-                clip = clip.resize((1080, 1920))
+                if isinstance(clip, VideoFileClip) and clip.duration > max_clip_duration:
+                    clip = clip.subclipped(0, max_clip_duration)
 
-                # apply grayscale effect
-                clip = fx.blackwhite(clip)
+                clip = fx.Resize(clip, (1080, 1920))
 
-                if clip.duration > max_clip_duration:
-                    clip = clip.subclip(0, max_clip_duration)
-
-                clips.append(clip)
-
-                self.close_clip(clip)
-                tot_dur += clip.duration
-                logger.debug(f"Total duration after adding clip: {tot_dur}")
+                if isinstance(clip, VideoFileClip):
+                    clips.append(clip)
+                    self.close_clip(clip)
+                    tot_dur += clip.duration
+                    logger.debug(f"Total duration after adding clip: {tot_dur}")
 
         final_clip = concatenate_videoclips(clips=clips, method="compose")
+        final_clip = fx.blackwhite(final_clip)
+        final_clip = fx.Resize(final_clip, (1080, 1920))
         final_clip = final_clip.with_fps(30)
         final_clip.write_videofile(combined_video_path, threads=threads)
 
@@ -195,7 +194,7 @@ class VideoGenerator:
         song_clip = AudioFileClip(song_path).with_fps(44100)
 
         # set the volume of the song to 10% of the original volume
-        song_clip = song_clip.subclip().multiply_volume(0.2)
+        song_clip = song_clip.subclipped().multiply_volume(0.2)
 
         # add the song to the video
         comp_audio = CompositeAudioClip([original_audio, song_clip])

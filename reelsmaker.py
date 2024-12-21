@@ -2,6 +2,7 @@ import asyncio
 import multiprocessing
 import os
 import typing
+import langchain
 from uuid import uuid4
 
 from loguru import logger

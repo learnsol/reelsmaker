@@ -26,7 +26,7 @@ class SynthGenerator:
         self.config = config
         self.cwd = cwd
         self.cache_key: str | None = None
-        self.eleven_voice_id = "ALDM8G793G6dq21Vj1Jm"
+        self.eleven_voice_id = "nPczCjzI2devNBz1zQrb"
 
         self.base = os.path.join(self.cwd, "audio_chunks")
 
